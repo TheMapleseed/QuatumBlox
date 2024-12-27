@@ -1,0 +1,18 @@
+int main(int argc, char **argv) {
+    MPI_Init(&argc, &argv);
+    
+    QHiFFS_State qs;
+    init_qhiffs(&qs, QUBITS);
+    
+    // High-frequency simulation loop
+    for (int t = 0; t < TIME_STEPS; t++) {
+        apply_kick_operator(&qs, FREQUENCY);
+        evolve_state_gpu<<<GRID_SIZE, BLOCK_SIZE>>>(
+            qs.state, hamiltonian, STATES);
+        apply_error_correction(&qs);
+        sync_quantum_state(&qs);
+    }
+    
+    MPI_Finalize();
+    return 0;
+}
